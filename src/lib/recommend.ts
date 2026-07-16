@@ -1,4 +1,5 @@
 import { catalog, type Resource } from "./catalog";
+import trainedModel from "../../models/learning-ranker.json";
 
 export type LearnerInput = {
   topic: Resource["topic"];
@@ -9,13 +10,36 @@ export type LearnerInput = {
 
 export type ScoredResource = Resource & { relevance: number; reason: string; exploration: boolean };
 
+type ModelFeatures = {
+  topicMatch: number;
+  levelFit: number;
+  timeFit: number;
+  formatMatch: number;
+};
+
+const levelTarget = (confidence: number) => confidence <= 2 ? 1 : confidence <= 4 ? 2 : 3;
+
+const resourceFeatures = (resource: Resource, input: LearnerInput): ModelFeatures => {
+  const target = levelTarget(input.confidence);
+  return {
+    topicMatch: resource.topic === input.topic ? 1 : 0,
+    levelFit: Math.max(0, 1 - Math.abs(resource.level - target) / 2),
+    timeFit: Math.max(0, 1 - Math.abs(resource.minutes - input.minutes) / 45),
+    formatMatch: input.preferredFormat === "No preference" || resource.format === input.preferredFormat ? 1 : 0,
+  };
+};
+
+const modelProbability = (features: ModelFeatures) => {
+  const featureTotal = trainedModel.weights.reduce((total, weight, index) => total + weight * features[trainedModel.featureNames[index] as keyof ModelFeatures], 0);
+  return 1 / (1 + Math.exp(-(trainedModel.bias + featureTotal)));
+};
+
 const scoreResource = (resource: Resource, input: LearnerInput) => {
+  const modelScore = modelProbability(resourceFeatures(resource, input)) * 72;
   const levelTarget = input.confidence <= 2 ? 1 : input.confidence <= 4 ? 2 : 3;
-  const topicFit = resource.topic === input.topic ? 42 : 0;
-  const levelFit = Math.max(0, 25 - Math.abs(resource.level - levelTarget) * 12);
-  const timeFit = Math.max(0, 22 - Math.abs(resource.minutes - input.minutes) * 0.55);
-  const formatFit = input.preferredFormat === "No preference" || resource.format === input.preferredFormat ? 11 : 0;
-  return topicFit + levelFit + timeFit + formatFit;
+  const topicBonus = resource.topic === input.topic ? 18 : 0;
+  const levelBonus = Math.max(0, 7 - Math.abs(resource.level - levelTarget) * 4);
+  return modelScore + topicBonus + levelBonus;
 };
 
 const recommendationReason = (resource: Resource, input: LearnerInput, exploration: boolean) => {

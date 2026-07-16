@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "train": "node scripts/train-ranker.mjs"
+    "train": "node scripts/train-ranker.mjs",
+    "verify": "npm run lint && npm run build"
   },
   "dependencies": {
     "next": "16.2.9",

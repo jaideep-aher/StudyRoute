@@ -1,0 +1,5 @@
+{
+  "source": "data/raw/pilot_feedback.json",
+  "trainingRows": 25,
+  "validationRows": 7
+}

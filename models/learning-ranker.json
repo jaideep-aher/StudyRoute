@@ -1,0 +1,24 @@
+{
+  "modelType": "logistic regression",
+  "version": "1.0",
+  "featureNames": [
+    "topicMatch",
+    "levelFit",
+    "timeFit",
+    "formatMatch"
+  ],
+  "bias": -2.6058436787736676,
+  "weights": [
+    -0.01609218866314424,
+    2.351255529682458,
+    2.3325731765786233,
+    -0.2326919801523828
+  ],
+  "trainingRows": 25,
+  "validation": {
+    "rows": 7,
+    "accuracy": 0.857,
+    "precision": 0.75,
+    "recall": 1
+  }
+}

@@ -64,3 +64,11 @@ export function recommend(input: LearnerInput): ScoredResource[] {
   const exploration = explorationPool[0];
   return [...selected, exploration].filter(Boolean).map((resource) => ({ ...resource, reason: recommendationReason(resource, input, resource.exploration) }));
 }
+
+export function recommendByFit(input: LearnerInput): ScoredResource[] {
+  return catalog
+    .filter((resource) => resource.topic === input.topic)
+    .map((resource) => ({ ...resource, relevance: Math.round(scoreResource(resource, input)), exploration: false, reason: recommendationReason(resource, input, false) }))
+    .sort((a, b) => b.relevance - a.relevance)
+    .slice(0, 3);
+}
